@@ -18,46 +18,62 @@ public class ApiController {
     // 1. uuid (HTTP GET)
     @GetMapping("/uuid")
     public String getUuid() {
-        return "<!DOCTYPE html><html><head><title>Student ID</title></head><body><h1>12345678</h1></body></html>";
+        return "<!DOCTYPE html><html><head><title>Student ID</title></head><body><h1>s1943226</h1></body></html>";
     }
 
     // 2. valuemanager (HTTP POST)
     @PostMapping("/valuemanager")
-    public ResponseEntity<String> writeValue(@RequestParam String key, @RequestParam String value) {
+    public ResponseEntity<Void> writeValue(@RequestParam String key, @RequestParam String value) {
+        if (key == null || key.isEmpty() || value == null || value.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
         valueManagerService.writeValue(key, value);
-        return ResponseEntity.ok("Value written successfully");
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/valuemanager/{key}/{value}")
-    public ResponseEntity<String> writeValuePath(@PathVariable String key, @PathVariable String value) {
+    public ResponseEntity<Void> writeValuePath(@PathVariable String key, @PathVariable String value) {
+        if (key == null || key.isEmpty() || value == null || value.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
         valueManagerService.writeValue(key, value);
-        return ResponseEntity.ok("Value written successfully");
+        return ResponseEntity.ok().build();
     }
 
     // 3. valuemanager/key (HTTP DELETE)
     @DeleteMapping("/valuemanager/{key}")
-    public ResponseEntity<String> deleteValue(@PathVariable String key) {
+    public ResponseEntity<Void> deleteValue(@PathVariable String key) {
+        if (key == null || key.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
         if (valueManagerService.deleteValue(key)) {
-            return ResponseEntity.ok("Value deleted successfully");
+            return ResponseEntity.ok().build();
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Key not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
     // 4. valuemanager/key (HTTP GET)
     @GetMapping("/valuemanager/{key}")
     public ResponseEntity<String> getValue(@PathVariable String key) {
+        if (key == null || key.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
         String value = valueManagerService.getValue(key);
         if (value != null) {
             return ResponseEntity.ok().body(value);
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 
-    @GetMapping("/valuemanager")
+    @GetMapping("/valuemanager/")
     public ResponseEntity<Map<String, String>> getAllValues() {
-        return ResponseEntity.ok().body(valueManagerService.getAllValues());
+        Map<String, String> allValues = valueManagerService.getAllValues();
+        if (allValues.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        return ResponseEntity.ok().body(allValues);
     }
 
     // 5. callservice (HTTP POST)
@@ -66,17 +82,25 @@ public class ApiController {
         String externalBaseUrl = request.get("externalBaseUrl");
         String parameters = request.get("parameters");
 
-        if (externalBaseUrl == null || parameters == null) {
-            return ResponseEntity.badRequest().body("Invalid request body");
+        if (externalBaseUrl == null || externalBaseUrl.isEmpty() || parameters == null || parameters.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        String url = externalBaseUrl + parameters;
+        String url;
+        if (externalBaseUrl.endsWith("/") && parameters.startsWith("/")) {
+            url = externalBaseUrl + parameters.substring(1);
+        } else if (externalBaseUrl.endsWith("/") || parameters.startsWith("/")) {
+            url = externalBaseUrl + parameters;
+        } else {
+            url = externalBaseUrl + "/" + parameters;
+        }
+
         RestTemplate restTemplate = new RestTemplate();
         try {
             String response = restTemplate.getForObject(url, String.class);
             return ResponseEntity.ok().body(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to call external service");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 }
