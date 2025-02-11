@@ -67,7 +67,7 @@ public class ApiController {
         }
     }
 
-    @GetMapping("/valuemanager/")
+    @GetMapping("/valuemanager")
     public ResponseEntity<Map<String, String>> getAllValues() {
         Map<String, String> allValues = valueManagerService.getAllValues();
         if (allValues.isEmpty()) {
