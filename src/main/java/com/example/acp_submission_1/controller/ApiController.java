@@ -23,8 +23,8 @@ public class ApiController {
 
     // 2. valuemanager (HTTP POST)
     @PostMapping("/valuemanager")
-    public ResponseEntity<Void> writeValue(@RequestParam String key, @RequestParam String value) {
-        if (key == null || key.isEmpty() || value == null || value.isEmpty()) {
+    public ResponseEntity<Void> writeValue(@RequestParam String key, @RequestParam(required = false) String value) {
+        if (key == null || key.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
         valueManagerService.writeValue(key, value);
@@ -33,10 +33,19 @@ public class ApiController {
 
     @PostMapping("/valuemanager/{key}/{value}")
     public ResponseEntity<Void> writeValuePath(@PathVariable String key, @PathVariable String value) {
-        if (key == null || key.isEmpty() || value == null || value.isEmpty()) {
+        if (key == null || key.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
         valueManagerService.writeValue(key, value);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/valuemanager/{key}")
+    public ResponseEntity<Void> writeValueWithNull(@PathVariable String key) {
+        if (key == null || key.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        valueManagerService.writeValue(key, null);
         return ResponseEntity.ok().build();
     }
 
